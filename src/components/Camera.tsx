@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Camera as CapacitorCamera } from '@capacitor/camera';
+import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { Settings, Camera as CameraIcon, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 const Camera = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [settings, setSettings] = useState({
     algorithm: 'ordered' as 'ordered' | 'floyd-steinberg' | 'atkinson',
@@ -37,9 +38,11 @@ const Camera = () => {
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        videoRef.current.onloadedmetadata = () => {
+          setIsVideoLoaded(true);
+          videoRef.current?.play();
+        };
       }
-      processFrame();
     } catch (err) {
       toast({
         title: "Camera Error",
@@ -50,7 +53,7 @@ const Camera = () => {
   };
 
   const processFrame = () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current || !canvasRef.current || !isVideoLoaded) return;
 
     const ctx = canvasRef.current.getContext('2d');
     if (!ctx) return;
@@ -83,6 +86,12 @@ const Camera = () => {
     requestAnimationFrame(process);
   };
 
+  useEffect(() => {
+    if (isVideoLoaded) {
+      processFrame();
+    }
+  }, [isVideoLoaded, settings]);
+
   const capturePhoto = async () => {
     if (!canvasRef.current) return;
     
@@ -90,8 +99,8 @@ const Camera = () => {
       const dataUrl = canvasRef.current.toDataURL('image/png');
       // Save the image using Capacitor Camera API
       await CapacitorCamera.getPhoto({
-        resultType: 'base64',
-        source: 'camera',
+        resultType: CameraResultType.Base64,
+        source: CameraSource.Camera,
         quality: 90
       });
       
