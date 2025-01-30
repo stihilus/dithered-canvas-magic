@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { Camera as CapacitorCamera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { Camera as CapacitorCamera } from '@capacitor/camera';
 import { Settings, Camera as CameraIcon, X } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -97,18 +97,27 @@ const Camera = () => {
     
     try {
       const dataUrl = canvasRef.current.toDataURL('image/png');
-      // Save the image using Capacitor Camera API
-      await CapacitorCamera.getPhoto({
-        resultType: CameraResultType.Base64,
-        source: CameraSource.Camera,
-        quality: 90
-      });
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
       
-      toast({
-        title: "Success",
-        description: "Photo captured and saved!",
-      });
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        const base64data = reader.result as string;
+        
+        // Save using Capacitor's Filesystem API
+        await CapacitorCamera.addNewToPhotoAlbum({
+          data: base64data
+        });
+        
+        toast({
+          title: "Success",
+          description: "Photo captured and saved!",
+        });
+      };
     } catch (err) {
+      console.error('Error saving photo:', err);
       toast({
         title: "Error",
         description: "Failed to save photo.",
