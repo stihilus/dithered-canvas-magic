@@ -97,25 +97,21 @@ const Camera = () => {
     
     try {
       const dataUrl = canvasRef.current.toDataURL('image/png');
-      const response = await fetch(dataUrl);
-      const blob = await response.blob();
       
-      // Convert blob to base64
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
-      reader.onloadend = async () => {
-        const base64data = reader.result as string;
-        
-        // Save using Capacitor's Filesystem API
-        await CapacitorCamera.addNewToPhotoAlbum({
-          data: base64data
-        });
-        
-        toast({
-          title: "Success",
-          description: "Photo captured and saved!",
-        });
-      };
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = `dithered-photo-${Date.now()}.png`;
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Success",
+        description: "Photo captured! Check your downloads folder.",
+      });
     } catch (err) {
       console.error('Error saving photo:', err);
       toast({
