@@ -111,11 +111,11 @@ const Camera = () => {
       
       // Calculate dimensions to match screen aspect ratio
       if (screenAspectRatio > 1) { // Landscape
-        cropHeight = videoHeight;
-        cropWidth = videoHeight * (16/9);
-      } else { // Portrait
         cropWidth = videoWidth;
-        cropHeight = videoWidth * (16/9);
+        cropHeight = videoWidth / (16/9);
+      } else { // Portrait
+        cropHeight = videoHeight;
+        cropWidth = videoHeight / (16/9);
       }
       
       // Center the crop
@@ -130,30 +130,33 @@ const Camera = () => {
       const tempCtx = tempCanvas.getContext('2d');
       if (!tempCtx) return;
       
-      tempCtx.drawImage(
-        canvasRef.current,
-        offsetX, offsetY, // Source position
-        cropWidth, cropHeight, // Source dimensions
-        0, 0, // Destination position
-        cropWidth, cropHeight // Destination dimensions
+      // Get the current frame from the canvas
+      const currentFrame = canvasRef.current.getContext('2d')?.getImageData(
+        offsetX, offsetY,
+        cropWidth, cropHeight
       );
       
-      const dataUrl = tempCanvas.toDataURL('image/png');
-      
-      // Create a temporary link element
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `dithered-photo-${Date.now()}.png`;
-      
-      // Append to body, click, and remove
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Success",
-        description: "Photo captured! Check your downloads folder.",
-      });
+      if (currentFrame) {
+        // Draw the frame to the temporary canvas
+        tempCtx.putImageData(currentFrame, 0, 0);
+        
+        const dataUrl = tempCanvas.toDataURL('image/png');
+        
+        // Create a temporary link element
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = `dithered-photo-${Date.now()}.png`;
+        
+        // Append to body, click, and remove
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        toast({
+          title: "Success",
+          description: "Photo captured! Check your downloads folder.",
+        });
+      }
     } catch (err) {
       console.error('Error saving photo:', err);
       toast({
