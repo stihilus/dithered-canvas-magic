@@ -96,20 +96,47 @@ const Camera = () => {
     if (!canvasRef.current || !videoRef.current) return;
     
     try {
+      // Get screen dimensions
+      const screenWidth = window.innerWidth;
+      const screenHeight = window.innerHeight;
+      const screenAspectRatio = screenWidth / screenHeight;
+
       // Get the video dimensions
       const videoWidth = videoRef.current.videoWidth;
       const videoHeight = videoRef.current.videoHeight;
       
-      // Create a temporary canvas with the same aspect ratio
+      // Create a temporary canvas
       const tempCanvas = document.createElement('canvas');
-      tempCanvas.width = videoWidth;
-      tempCanvas.height = videoHeight;
+      let cropWidth, cropHeight;
       
-      // Draw the current canvas content to the temp canvas
+      // Calculate dimensions to match screen aspect ratio
+      if (screenAspectRatio > 1) { // Landscape
+        cropHeight = videoHeight;
+        cropWidth = videoHeight * (16/9);
+      } else { // Portrait
+        cropWidth = videoWidth;
+        cropHeight = videoWidth * (16/9);
+      }
+      
+      // Center the crop
+      const offsetX = (videoWidth - cropWidth) / 2;
+      const offsetY = (videoHeight - cropHeight) / 2;
+      
+      // Set canvas size to match crop dimensions
+      tempCanvas.width = cropWidth;
+      tempCanvas.height = cropHeight;
+      
+      // Draw the cropped portion of the canvas
       const tempCtx = tempCanvas.getContext('2d');
       if (!tempCtx) return;
       
-      tempCtx.drawImage(canvasRef.current, 0, 0, videoWidth, videoHeight);
+      tempCtx.drawImage(
+        canvasRef.current,
+        offsetX, offsetY, // Source position
+        cropWidth, cropHeight, // Source dimensions
+        0, 0, // Destination position
+        cropWidth, cropHeight // Destination dimensions
+      );
       
       const dataUrl = tempCanvas.toDataURL('image/png');
       
