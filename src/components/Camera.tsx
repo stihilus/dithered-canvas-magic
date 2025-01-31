@@ -202,15 +202,8 @@ const Camera = () => {
 
       {showSettings && (
         <div className="settings-modal bg-background/60 backdrop-blur-sm">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">Settings</h2>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setShowSettings(false)}
-            >
-              <X className="w-6 h-6" />
-            </Button>
           </div>
 
           <div className="space-y-6">
@@ -282,6 +275,17 @@ const Camera = () => {
                 step={1}
               />
             </div>
+          </div>
+
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setShowSettings(false)}
+              className="w-12 h-12 rounded-full bg-background/20 backdrop-blur-sm border-white/20"
+            >
+              <X className="w-6 h-6" />
+            </Button>
           </div>
         </div>
       )}
