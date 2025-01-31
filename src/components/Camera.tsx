@@ -93,10 +93,25 @@ const Camera = () => {
   }, [isVideoLoaded, settings]);
 
   const capturePhoto = async () => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current || !videoRef.current) return;
     
     try {
-      const dataUrl = canvasRef.current.toDataURL('image/png');
+      // Get the video dimensions
+      const videoWidth = videoRef.current.videoWidth;
+      const videoHeight = videoRef.current.videoHeight;
+      
+      // Create a temporary canvas with the same aspect ratio
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = videoWidth;
+      tempCanvas.height = videoHeight;
+      
+      // Draw the current canvas content to the temp canvas
+      const tempCtx = tempCanvas.getContext('2d');
+      if (!tempCtx) return;
+      
+      tempCtx.drawImage(canvasRef.current, 0, 0, videoWidth, videoHeight);
+      
+      const dataUrl = tempCanvas.toDataURL('image/png');
       
       // Create a temporary link element
       const link = document.createElement('a');
@@ -156,7 +171,7 @@ const Camera = () => {
       </div>
 
       {showSettings && (
-        <div className="settings-modal animate-in slide-in-from-bottom">
+        <div className="settings-modal bg-background/60 backdrop-blur-sm">
           <div className="flex justify-between items-center">
             <h2 className="text-xl font-bold">Settings</h2>
             <Button
